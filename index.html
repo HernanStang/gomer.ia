@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Registro">
+<meta name="theme-color" content="#14213d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Registro de Trabajos</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #14213d; --primary-dark: #0a1426; --primary-light: #1e3a5f;
+  --accent: #27ae60; --accent-dark: #1e8449;
+  --warn: #f39c12; --danger: #e74c3c;
+  --bg: #f0f4f8; --card: #fff;
+  --text: #1a1a2e; --muted: #6b7280; --border: #dde3eb; --radius: 12px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 48px; }
+
+header { background: var(--primary); color: #fff; padding: 16px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.15); padding-top: max(16px, env(safe-area-inset-top)); }
+header h1 { font-size: 17px; font-weight: 700; }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+.badge { background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+.container { padding: 14px; max-width: 520px; margin: 0 auto; }
+
+.card { background: var(--card); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 14px; }
+
+/* Edit banner */
+.edit-banner { display: none; align-items: center; justify-content: space-between; gap: 10px; background: #fff8e1; border: 1.5px solid #f5cf6e; border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; color: #6d4c00; font-size: 13px; font-weight: 600; }
+.edit-banner.visible { display: flex; }
+.edit-banner .pencil { font-size: 16px; }
+.edit-banner button { background: #fff; border: 1.5px solid #f5cf6e; color: #6d4c00; padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+
+.field { margin-bottom: 12px; }
+label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+input, select, textarea {
+  width: 100%; padding: 12px 13px; border: 1.5px solid var(--border); border-radius: 9px;
+  font-size: 16px; color: var(--text); background: #fff; appearance: none; -webkit-appearance: none;
+  transition: border-color .15s; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(20,33,61,.12); }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+textarea { resize: none; height: 70px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.other-input { margin-top: 7px; display: none; }
+.other-input.visible { display: block; }
+
+/* Services list */
+.services-list { margin-bottom: 10px; }
+.service-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.service-row .srv-sel { flex: 1; min-width: 0; }
+.service-row .srv-qty { width: 72px; flex-shrink: 0; }
+.service-row .srv-del { flex-shrink: 0; margin-top: 1px; background: none; border: 1.5px solid #fcd5d3; border-radius: 8px; color: var(--danger); width: 44px; height: 44px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.srv-other { margin-top: 6px; display: none; }
+.srv-other.visible { display: block; }
+
+.add-service-btn { width: 100%; padding: 11px; border: 1.5px dashed var(--border); border-radius: 9px; background: none; color: var(--primary); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.add-service-btn:active { background: #eef2f8; }
+
+/* Buttons */
+.btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s; letter-spacing: .1px; }
+.btn-primary { background: var(--primary); color: #fff; margin-top: 12px; }
+.btn-primary:active { background: var(--primary-dark); transform: scale(.98); }
+.btn-export { background: var(--accent); color: #fff; margin-top: 10px; }
+.btn-export:active { background: var(--accent-dark); transform: scale(.98); }
+.btn-danger { background: #fff0ef; color: var(--danger); border: 1.5px solid #fcd5d3; margin-top: 8px; font-size: 14px; padding: 11px; }
+
+/* Entries */
+.entries-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.entries-header .card-title { margin-bottom: 0; }
+
+.entry-item { border: 1.5px solid var(--border); border-radius: 9px; padding: 11px 13px 11px 13px; margin-bottom: 8px; position: relative; }
+.entry-item.editing { border-color: #f5cf6e; background: #fffdf6; }
+.entry-item:last-child { margin-bottom: 0; }
+.entry-date { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+.entry-main { font-size: 14px; font-weight: 700; margin-bottom: 3px; padding-right: 70px; }
+.entry-svc  { font-size: 13px; color: var(--muted); line-height: 1.5; padding-right: 70px; }
+
+.entry-actions { position: absolute; top: 7px; right: 7px; display: flex; gap: 2px; }
+.entry-actions button { background: none; border: none; color: #b0b6bf; font-size: 17px; cursor: pointer; padding: 5px 7px; border-radius: 6px; line-height: 1; }
+.entry-actions .entry-edit:active { color: var(--primary); background: #eef2f8; }
+.entry-actions .entry-del:active  { color: var(--danger); background: #fff0ef; }
+
+.empty-state { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; }
+.empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: #fff; padding: 11px 22px; border-radius: 30px; font-size: 14px; font-weight: 600; transition: transform .3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.2); max-width: calc(100% - 32px); text-align: center; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Registro de Trabajos</h1>
+  <div class="hdr-right">
+    <span class="badge" id="headerCount">0</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- EDIT BANNER -->
+  <div class="edit-banner" id="editBanner">
+    <span><span class="pencil">✏️</span> Editando registro</span>
+    <button onclick="cancelarEdicion()">Cancelar</button>
+  </div>
+
+  <!-- FORM -->
+  <div class="card">
+    <div class="card-title" id="formTitle">Nuevo trabajo</div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+      <div class="field">
+        <label>Cliente</label>
+        <select id="cliente" onchange="toggleOther('cliente')">
+          <option value="">— Cliente —</option>
+          <option>Aguirre</option>
+          <option>Benítez Mario</option>
+          <option>Dani Strieder</option>
+          <option>Dederer Héctor</option>
+          <option>Ferreyra Juan</option>
+          <option>Fremar</option>
+          <option>Henkes Julio</option>
+          <option>Indufor</option>
+          <option>Mar-se</option>
+          <option>Municipalidad</option>
+          <option>Peta</option>
+          <option>Schoffen</option>
+          <option>Weber Sergio</option>
+          <option value="__otro__">Otro...</option>
+        </select>
+        <input type="text" id="cliente_otro" class="other-input" placeholder="Nombre del cliente">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Chofer / Patente</label>
+      <input type="text" id="chofer" placeholder="Ej: Stang, AF 288 FG" autocomplete="off" autocapitalize="words">
+    </div>
+
+    <div class="field">
+      <label>Servicios</label>
+      <div class="services-list" id="servicesList"></div>
+      <button class="add-service-btn" onclick="addServiceRow()">+ Agregar servicio</button>
+    </div>
+
+    <div class="field">
+      <label>Observaciones <span style="font-weight:400;color:#bbb">(opcional)</span></label>
+      <textarea id="obs" placeholder="Notas adicionales..."></textarea>
+    </div>
+
+    <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">✓ Guardar</button>
+  </div>
+
+  <!-- ENTRIES -->
+  <div class="card">
+    <div class="entries-header">
+      <div class="card-title">Pendientes de exportar</div>
+      <span class="badge" id="entriesCount" style="background:var(--primary)">0</span>
+    </div>
+    <div id="entriesList">
+      <div class="empty-state"><div class="icon">📋</div><div>No hay trabajos aún.</div></div>
+    </div>
+    <button class="btn btn-export" onclick="exportar()" id="btnExport" style="display:none">⬇ Exportar CSV</button>
+    <button class="btn btn-danger" onclick="limpiarTodo()" id="btnClear" style="display:none">🗑 Limpiar todo</button>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+const LS_KEY = 'reg_trabajos_v2';
+
+// ── Catálogo de servicios ─────────────────────────────────────
+const SERVICIOS = [
+  {g:'🛞 Gomería', items:[
+    'Desarme y arme R22.5',
+    'Balanceo R22.5',
+    'Tableta contrapeso autoadhesivo',
+    'Rotación de maza R22.5',
+    'Arreglo R22.5',
+  ]},
+  {g:'🛑 Frenos', items:[
+    'Cambio cinta de freno (por eje)',
+    'Cinta de freno CA32',
+    'Cinta de freno CA33',
+    'Cinta de freno CA32X',
+    'Cinta de freno CA33X',
+    'Cambio pastilla de freno (por eje)',
+    'Cambio patines de freno (por maza)',
+    'Desarmar pulmón de freno',
+    'Cambio sopapa de freno',
+    'Cambio regulador de freno',
+    'Cambio disco de freno',
+    'Cambio bujes de leva (por leva)',
+    'Cambio bujes de mordaza (por maza)',
+    'Revisión cintas de freno',
+  ]},
+  {g:'🛢️ Motor y aceites', items:[
+    'Cambio aceite y filtros de motor',
+    'Cambio aceite de caja',
+    'Cambio aceite de diferencial',
+    'Cambio kit tensores y correas',
+  ]},
+  {g:'🔩 Suspensión y ejes', items:[
+    'Bajada mazo elástico común',
+    'Bajada mazo elástico tracción',
+    'Bajada mazo elástico suspensión neumática',
+    'Cambio bujes de tensor (por tensor)',
+    'Cambio bujes del eje',
+  ]},
+  {g:'⚙️ Mazas y rulemanes', items:[
+    'Desarmar maza para limpieza completa y cambio de grasa',
+    'Desarmar maza para revisión de rulemanes',
+    'Desarmar maza para cambio de rulemanes',
+    'Cambio rulemán de maza tracción Volvo',
+    'Desarmar maza tracción Scania',
+    'Ajustar maza',
+  ]},
+  {g:'🧭 Dirección', items:[
+    'Cambio extremos de dirección',
+    'Cambio barra corta de dirección',
+    'Alineación delantera',
+    'Alineación semi',
+  ]},
+  {g:'🔧 Otros', items:[
+    'Trabajo de soldadura (por hora)',
+    'Cambio conexión/manguera de aire',
+    'Cambio filtro secador',
+  ]},
+];
+
+function buildSelectOptions() {
+  return SERVICIOS.map(g =>
+    `<optgroup label="${g.g}">${g.items.map(s=>`<option>${s}</option>`).join('')}</optgroup>`
+  ).join('') + '<option value="__otro__">Otro...</option>';
+}
+
+// ── Storage ───────────────────────────────────────────────────
+function loadEntries() {
+  return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+}
+function saveEntries(entries) {
+  localStorage.setItem(LS_KEY, JSON.stringify(entries));
+}
+
+// ── Edit state ────────────────────────────────────────────────
+let editingIds = [];
+
+// ── Service rows ──────────────────────────────────────────────
+let svcCounter = 0;
+
+function addServiceRow(val='', qty=1) {
+  svcCounter++;
+  const id  = svcCounter;
+  const div = document.createElement('div');
+  div.className = 'service-row';
+  div.id = `svc_${id}`;
+  div.innerHTML = `
+    <div class="srv-sel">
+      <select onchange="toggleSvcOther(${id})">
+        <option value="">— Servicio —</option>
+        ${buildSelectOptions()}
+      </select>
+      <input type="text" class="srv-other" id="svc_other_${id}" placeholder="Describí el servicio">
+    </div>
+    <input type="number" class="srv-qty" value="${qty}" min="0.5" step="0.5">
+    <button class="srv-del" onclick="removeServiceRow(${id})">✕</button>`;
+  if (val) {
+    const sel = div.querySelector('select');
+    let matched = false;
+    for (let opt of sel.options) {
+      if (opt.value === val || opt.text === val) {
+        sel.value = opt.value || opt.text;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      sel.value = '__otro__';
+      const oi = div.querySelector('.srv-other');
+      oi.classList.add('visible');
+      oi.value = val;
+    }
+  }
+  document.getElementById('servicesList').appendChild(div);
+}
+
+function removeServiceRow(id) {
+  const el = document.getElementById(`svc_${id}`);
+  if (el) el.remove();
+}
+
+function toggleSvcOther(id) {
+  const sel = document.querySelector(`#svc_${id} select`);
+  const inp = document.getElementById(`svc_other_${id}`);
+  if (sel.value === '__otro__') { inp.classList.add('visible'); inp.focus(); }
+  else { inp.classList.remove('visible'); inp.value = ''; }
+}
+
+function getServiceRows() {
+  const rows   = document.querySelectorAll('.service-row');
+  const result = [];
+  for (const row of rows) {
+    const sel = row.querySelector('select');
+    const qty = parseFloat(row.querySelector('.srv-qty').value) || 1;
+    let srv   = sel.value === '__otro__' ? row.querySelector('.srv-other').value.trim() : sel.value;
+    if (srv) result.push({ servicio: srv, cantidad: qty });
+  }
+  return result;
+}
+
+// ── Other toggles ─────────────────────────────────────────────
+function toggleOther(field) {
+  const sel = document.getElementById(field);
+  const inp = document.getElementById(field + '_otro');
+  if (sel.value === '__otro__') { inp.classList.add('visible'); inp.focus(); }
+  else { inp.classList.remove('visible'); inp.value = ''; }
+}
+function getFieldValue(field) {
+  const sel = document.getElementById(field);
+  if (sel.value === '__otro__') return document.getElementById(field + '_otro').value.trim();
+  return sel.value;
+}
+function setClienteValue(value) {
+  const sel = document.getElementById('cliente');
+  const inp = document.getElementById('cliente_otro');
+  let matched = false;
+  for (let opt of sel.options) {
+    if (opt.value === value || opt.text === value) {
+      sel.value = opt.value || opt.text;
+      matched = true;
+      break;
+    }
+  }
+  if (!matched) {
+    sel.value = '__otro__';
+    inp.classList.add('visible');
+    inp.value = value;
+  } else {
+    inp.classList.remove('visible');
+    inp.value = '';
+  }
+}
+
+// ── Guardar / Actualizar ──────────────────────────────────────
+async function guardar() {
+  const fecha   = document.getElementById('fecha').value;
+  const cliente = getFieldValue('cliente');
+  const chofer  = document.getElementById('chofer').value.trim();
+  const svcRows = getServiceRows();
+  const obs     = document.getElementById('obs').value.trim();
+
+  if (!fecha || !cliente || !chofer) { showToast('⚠️ Completá fecha, cliente y chofer'); return; }
+  if (svcRows.length === 0)          { showToast('⚠️ Agregá al menos un servicio');       return; }
+
+  let entries = loadEntries();
+  const wasEditing = editingIds.length > 0;
+
+  // Si estamos editando, eliminar las entradas originales primero
+  if (wasEditing) {
+    entries = entries.filter(e => !editingIds.includes(e.id));
+  }
+
+  const ts = Date.now();
+  svcRows.forEach((r, i) => {
+    entries.push({ id: ts + i, fecha, cliente, chofer, servicio: r.servicio, cantidad: r.cantidad, obs: i === 0 ? obs : '' });
+  });
+  saveEntries(entries);
+
+  // Limpiar estado de edición
+  editingIds = [];
+  document.getElementById('editBanner').classList.remove('visible');
+  document.getElementById('btnGuardar').textContent = '✓ Guardar';
+  document.getElementById('formTitle').textContent = 'Nuevo trabajo';
+
+  // Resetear servicios y obs; mantener fecha, cliente y chofer
+  document.getElementById('servicesList').innerHTML = '';
+  svcCounter = 0;
+  addServiceRow();
+  document.getElementById('obs').value = '';
+
+  renderEntries();
+
+  if (wasEditing) {
+    showToast('✓ Registro actualizado');
+  } else {
+    showToast(`✓ ${svcRows.length} servicio${svcRows.length > 1 ? 's' : ''} guardado${svcRows.length > 1 ? 's' : ''}`);
+  }
+}
+
+// ── Editar grupo ──────────────────────────────────────────────
+function editarGrupo(idsJson) {
+  const ids = typeof idsJson === 'string' ? JSON.parse(idsJson) : idsJson;
+  const entries = loadEntries();
+  const group = entries.filter(e => ids.includes(e.id));
+  if (group.length === 0) return;
+
+  // Ordenar por id (que tiene timestamp + offset) para mantener orden original
+  group.sort((a, b) => a.id - b.id);
+
+  editingIds = ids;
+  const first = group[0];
+
+  // Cargar campos
+  document.getElementById('fecha').value = first.fecha;
+  setClienteValue(first.cliente);
+  document.getElementById('chofer').value = first.chofer;
+  document.getElementById('obs').value = first.obs || '';
+
+  // Cargar servicios
+  document.getElementById('servicesList').innerHTML = '';
+  svcCounter = 0;
+  group.forEach(e => addServiceRow(e.servicio, e.cantidad));
+
+  // Actualizar UI
+  document.getElementById('formTitle').textContent = 'Editando trabajo';
+  document.getElementById('btnGuardar').textContent = '✓ Actualizar';
+  document.getElementById('editBanner').classList.add('visible');
+
+  // Re-render para resaltar el grupo en edición
+  renderEntries();
+
+  // Scroll arriba
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicion() {
+  editingIds = [];
+  document.getElementById('editBanner').classList.remove('visible');
+  document.getElementById('formTitle').textContent = 'Nuevo trabajo';
+  document.getElementById('btnGuardar').textContent = '✓ Guardar';
+
+  // Limpiar formulario
+  document.getElementById('servicesList').innerHTML = '';
+  svcCounter = 0;
+  addServiceRow();
+  document.getElementById('obs').value = '';
+  document.getElementById('chofer').value = '';
+
+  renderEntries();
+  showToast('Edición cancelada');
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderEntries() {
+  const entries = loadEntries();
+  const n = entries.length;
+  document.getElementById('headerCount').textContent  = n;
+  document.getElementById('entriesCount').textContent = n;
+  document.getElementById('btnExport').style.display  = n > 0 ? 'block' : 'none';
+  document.getElementById('btnClear').style.display   = n > 0 ? 'block' : 'none';
+
+  const list = document.getElementById('entriesList');
+  if (n === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><div>No hay trabajos aún.</div></div>'; return; }
+
+  // Agrupar por fecha+cliente+chofer
+  const groups = {};
+  entries.slice().reverse().forEach(e => {
+    const key = `${e.fecha}|${e.cliente}|${e.chofer}`;
+    if (!groups[key]) groups[key] = { fecha: e.fecha, cliente: e.cliente, chofer: e.chofer, ids: [], svcs: [] };
+    groups[key].ids.push(e.id);
+    groups[key].svcs.push(`${e.servicio}${e.cantidad !== 1 ? ' ×' + e.cantidad : ''}`);
+  });
+
+  const meses  = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const fmtDate = d => { const [y,m,day] = d.split('-'); return `${parseInt(day)} ${meses[parseInt(m)]} ${y}`; };
+
+  list.innerHTML = Object.values(groups).map(g => {
+    const isEditing = editingIds.length > 0 && g.ids.every(id => editingIds.includes(id)) && g.ids.length === editingIds.length;
+    const idsAttr = JSON.stringify(g.ids).replace(/"/g, '&quot;');
+    return `
+    <div class="entry-item${isEditing ? ' editing' : ''}">
+      <div class="entry-actions">
+        <button class="entry-edit" onclick='editarGrupo(${JSON.stringify(g.ids)})' title="Editar">✏️</button>
+        <button class="entry-del"  onclick='eliminarGrupo(${JSON.stringify(g.ids)})' title="Eliminar">✕</button>
+      </div>
+      <div class="entry-date">${fmtDate(g.fecha)}</div>
+      <div class="entry-main">${g.cliente} · ${g.chofer}</div>
+      <div class="entry-svc">${g.svcs.join('<br>')}</div>
+    </div>`;
+  }).join('');
+}
+
+function eliminarGrupo(ids) {
+  // Si estaba en edición ese grupo, cancelar la edición
+  if (editingIds.length > 0 && ids.some(id => editingIds.includes(id))) {
+    cancelarEdicion();
+  }
+  saveEntries(loadEntries().filter(e => !ids.includes(e.id)));
+  renderEntries();
+  showToast('Entradas eliminadas');
+}
+
+function limpiarTodo() {
+  if (!confirm('¿Limpiar todo? Hacé esto después de exportar.')) return;
+  if (editingIds.length > 0) cancelarEdicion();
+  saveEntries([]);
+  renderEntries();
+  showToast('✓ Lista limpiada');
+}
+
+// ── Exportar CSV ──────────────────────────────────────────────
+function exportar() {
+  const entries = loadEntries();
+  if (!entries.length) return;
+  const hdr  = 'Fecha,Cliente,Chofer/Patente,Producto/Servicio,Cantidad,Observaciones';
+  const rows = entries.map(e => [e.fecha, `"${e.cliente}"`, `"${e.chofer}"`, `"${e.servicio}"`, e.cantidad, `"${(e.obs||'').replace(/"/g,'""')}"`].join(','));
+  const csv  = [hdr, ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `registros_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✓ CSV exportado');
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Service Worker (PWA offline) ──────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW falló:', err));
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────
+document.getElementById('fecha').valueAsDate = new Date();
+addServiceRow();
+renderEntries();
+</script>
+</body>
+</html>
